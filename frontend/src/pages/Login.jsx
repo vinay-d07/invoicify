@@ -1,19 +1,25 @@
 import React, { useState } from "react";
-
+import useAuth from "../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const navigate = useNavigate();
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-
-  const handleSubmit = (e) => {
+  const { login } = useAuth();
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
+    if (!username || !password) {
       setError("Please fill in all fields");
       return;
     }
     setError("");
-    console.log("Login attempt:", { email, password });
-    // Add authentication logic here
+    try {
+      await login({ username, password });
+      navigate('/home');
+    } catch (err) {
+      setError(err.message || 'Login failed');
+    }
   };
 
   return (
@@ -32,14 +38,14 @@ export default function Login() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
+              Username
             </label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-              placeholder="you@example.com"
+              placeholder="your username"
             />
           </div>
 
