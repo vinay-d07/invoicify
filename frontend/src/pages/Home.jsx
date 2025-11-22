@@ -29,7 +29,7 @@ export default function Home() {
       <main className="flex-1">
         <header className="flex justify-between items-center px-6 py-4 bg-white border-b border-gray-200">
           <h2 className="text-lg font-medium text-gray-900">Welcome Back 👋</h2>
-          <div className="text-sm text-gray-600">user@example.com</div>
+          <div className="text-sm text-gray-600">{localStorage.getItem('user')}</div>
         </header>
         <Dashboard />
       </main>

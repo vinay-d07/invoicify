@@ -1,12 +1,16 @@
 import React, { useState } from "react";
+import useAuth from "../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 export default function Signup() {
+  const navigate = useNavigate();
+  const { register } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!name || !email || !password) {
@@ -15,8 +19,18 @@ export default function Signup() {
     }
 
     setError("");
-    console.log("Signup attempt:", { name, email, password });
-    // Add your signup logic here
+    try {
+      const payload = {
+        username: name,
+        email,
+        password,
+        fullName: name,
+      };
+      await register(payload);
+      navigate('/login');
+    } catch (err) {
+      setError(err.message || 'Signup failed');
+    }
   };
 
   return (

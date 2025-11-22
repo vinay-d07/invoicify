@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-// import { useNavigation } from "react-router-dom";
 
 export default function useAuth() {
-//   const location = useNavigation();
   const [user, setUser] = useState(() => {
     try {
       const raw = localStorage.getItem("user");
@@ -35,9 +33,9 @@ export default function useAuth() {
   const isAuthenticated = !!token;
 
   
+  // Prefer Vite-exposed variable
   const baseBackendUrl =
-    (typeof import.meta !== 'undefined' &&
-      (import.meta.env.VITE_BACKEND_URL || import.meta.env.BACKEND_URL));
+    (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_BACKEND_URL) || '';
 
   const api = (path) => {
     if (!baseBackendUrl) return path; // use relative path if no base provided
@@ -45,13 +43,11 @@ export default function useAuth() {
   };
 
   const login = useCallback(async (credentials) => {
-    console.log(JSON.stringify(credentials))
-    const res = await fetch('http://localhost:8080/api/users/login', {
+    const res = await fetch(api('/api/users/login'), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(credentials),
     });
-    console.log(res)
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.message || "Login failed");
@@ -68,7 +64,7 @@ export default function useAuth() {
 
   const register = useCallback(async (payload) => {
     // payload e.g. { name, email, password }
-    const res = await fetch(api('/api/users'), {
+    const res = await fetch(api('/api/users/signup'), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

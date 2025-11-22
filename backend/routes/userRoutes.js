@@ -31,7 +31,16 @@ router.post("/login", async (req, res) => {
     const token = user.generateAuthToken();
     user.lastLoginAt = new Date();
     await user.save();
-    res.json({ token });
+    // return token along with basic user info (no password)
+    const userSafe = {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+      company: user.company,
+    };
+    res.json({ token, user: userSafe });
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ message: "Server error" });
@@ -50,7 +59,15 @@ router.post("/signup", async (req, res) => {
     await user.setPassword(password);
     await user.save();
     const token = user.generateAuthToken();
-    res.status(201).json({ token });
+    const userSafe = {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+      company: user.company,
+    };
+    res.status(201).json({ token, user: userSafe });
   } catch (error) {
     console.error("Signup error:", error);
     res.status(500).json({ message: "Server error" });

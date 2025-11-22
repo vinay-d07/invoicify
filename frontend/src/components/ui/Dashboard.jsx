@@ -1,47 +1,31 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import CreateInvoiceModal from "./CreateInvoiceModal";
 import ViewInvoiceModal from "./ViewInvoiceModal";
+import useInvoices from "../../hooks/useInvoices";
+import { Toaster } from "react-hot-toast";
 
 export default function Dashboard() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [invoices, setInvoices] = useState([]);
+  const { listInvoices } = useInvoices();
 
-  // Example invoice data (replace with fetched data)
-  const invoices = [
-    {
-      invoiceNumber: "INV-001",
-      client: {
-        name: "Acme Corp",
-        email: "billing@acme.com",
-        address: {
-          street: "123 Main St",
-          city: "Bangalore",
-          state: "KA",
-          postalCode: "560001",
-          country: "India",
-        },
-      },
-      status: "paid",
-      total: 12500,
-      dueDate: "2025-12-01",
-      invoiceDate: "2025-11-10",
-      subTotal: 11000,
-      taxTotal: 1500,
-      discount: 0,
-      items: [
-        {
-          description: "Web Design Service",
-          quantity: 1,
-          unitPrice: 11000,
-          taxRate: 10,
-          total: 12100,
-        },
-      ],
-    },
-  ];
+  const fetchInvoices = useCallback(async () => {
+    try {
+      const data = await listInvoices();
+      setInvoices(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to load invoices', err);
+    }
+  }, [listInvoices]);
+
+  useEffect(() => {
+    fetchInvoices();
+  }, [fetchInvoices]);
 
   return (
     <div className="p-6">
+      <Toaster />
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-2xl font-semibold text-gray-900">Dashboard</h2>
         <button
@@ -66,9 +50,9 @@ export default function Dashboard() {
           </thead>
           <tbody>
             {invoices.map((inv, i) => (
-              <tr key={i} className="border-t border-gray-100 hover:bg-gray-50">
+              <tr key={inv._id || i} className="border-t border-gray-100 hover:bg-gray-50">
                 <td className="px-6 py-3 font-medium">{inv.invoiceNumber}</td>
-                <td className="px-6 py-3">{inv.client.name}</td>
+                <td className="px-6 py-3">{inv.client?.name || '—'}</td>
                 <td className="px-6 py-3 capitalize">{inv.status}</td>
                 <td className="px-6 py-3">{inv.dueDate}</td>
                 <td className="px-6 py-3 text-right font-medium">
@@ -89,7 +73,7 @@ export default function Dashboard() {
       </div>
 
       {isCreateOpen && (
-        <CreateInvoiceModal onClose={() => setIsCreateOpen(false)} />
+        <CreateInvoiceModal onClose={() => { setIsCreateOpen(false); fetchInvoices(); }} />
       )}
       {selectedInvoice && (
         <ViewInvoiceModal

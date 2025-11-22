@@ -1,24 +1,70 @@
 import React, { useState } from "react";
+import useInvoices from "../../hooks/useInvoices";
+import useAuth from "../../hooks/useAuth";
+import { toast } from "react-hot-toast";
 
 export default function CreateInvoiceModal({ onClose }) {
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [clientName, setClientName] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
   const [invoiceDate, setInvoiceDate] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [status, setStatus] = useState("draft");
   const [total, setTotal] = useState("");
+  const { createInvoice } = useInvoices();
+  const { user } = useAuth();
 
-  const handleSubmit = (e) => {
+  // prefill client email if logged-in user has an email
+  React.useEffect(() => {
+    if (user && user.email) {
+      setClientEmail(user.email);
+    }
+  }, [user]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({
+    // validate required fields
+    if (!invoiceNumber || !clientName || !invoiceDate || !dueDate || !total) {
+      toast.error('Please fill invoice number, client, dates and total');
+      return;
+    }
+
+    const numericTotal = Number(total) || 0;
+
+    // Ensure at least one item (backend requires items entries)
+    const defaultItem = {
+      description: 'Item 1',
+      quantity: 1,
+      unitPrice: numericTotal,
+      taxRate: 0,
+      total: numericTotal,
+    };
+
+    const payload = {
       invoiceNumber,
-      clientName,
       invoiceDate,
       dueDate,
+      client: { name: clientName, email: clientEmail || (user && user.email) || '' },
+      items: [defaultItem],
+      subTotal: numericTotal,
+      taxTotal: 0,
+      discount: 0,
+      total: numericTotal,
+      currency: "INR",
+      notes: "",
+      terms: "",
+      paymentDetails: {},
       status,
-      total,
-    });
-    onClose();
+    };
+
+    try {
+      await createInvoice(payload);
+      toast.success("Invoice created successfully");
+      onClose();
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || "Failed to create invoice");
+    }
   };
 
   return (
@@ -55,6 +101,18 @@ export default function CreateInvoiceModal({ onClose }) {
                 placeholder="Acme Corp"
               />
             </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Client Email
+                </label>
+                <input
+                  type="email"
+                  value={clientEmail}
+                  onChange={(e) => setClientEmail(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="client@example.com"
+                />
+              </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
